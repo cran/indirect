@@ -1,0 +1,417 @@
+\documentclass[nojss]{jss}
+\usepackage{thumbpdf}
+\usepackage{amsmath}
+%% need no \usepackage{Sweave}
+
+\author{Geoffrey R. Hosack\\Commonwealth Scientific and Industrial Research Organisation}
+\Plainauthor{G. R. Hosack}
+\date{\itshape\today}
+
+\title{Indirect prior elicitation for generalised linear models with R package \pkg{indirect}}
+\Keywords{expert opinion, generalised linear models, subjective probability, elicitation, \proglang{R}}
+\Plainkeywords{expert opinion, generalised linear models, subjective probability, elicitation, R}
+
+\Abstract{
+The \proglang{R} package \pkg{indirect} supports the elicitation of multivariate normal priors for generalised linear models from domain experts. The software can be applied to indirect elicitation for a generalised linear model that is linear in the parameters. That is, the linear predictor can admit interactions, polynomial functions of the covariates or other choice of basis functions. The package is designed such that the facilitator executes functions within the \code{R} console during the elicitation session to provide graphical and numerical feedback at each design point. Various methodologies for eliciting fractiles (equivalently, percentiles or quantiles) are supported. For example, experts may be asked to provide central credible intervals that correspond to a certain probability. Or experts may be allowed to vary the probability allocated to the central credible interval for each design point. Additionally, a median may or may not be elicited. The package provides automatic document generation that summarises the elicitation session for the participating expert at the conclusion of the session. 
+}
+
+\Address{
+  Geoffrey R. Hosack\\
+  Commonwealth Scientific and Industrial Research Organisation\\
+  Hobart, Tasmania, Australia 7001\\
+  E-mail: \email{geoff.hosack@csiro.au}\\
+  URL: \url{http://people.csiro.au/H/G/Geoff-Hosack}
+}
+
+\begin{document}
+
+\SweaveOpts{engine=R,eps=FALSE}
+%\VignetteIndexEntry{Indirect prior elicitation for Bayesian generalised linear models}
+%\VignetteDepends{indirect}
+%\VignetteKeywords{expert opinion, generalised linear models, subjective probability, elicitation, R}
+%\VignettePackage{indirect}
+
+
+<<setup,echo=FALSE,results=hide>>=
+options(prompt = "R> ", continue = "+   ")
+@
+
+\section{Introduction} \label{sec:intro}
+
+The \code{R} package \pkg{indirect} is introduced to support the elicitation of multivariate normal priors for generalised linear models. Key guidance for the general elicitation of subjective probability distributions from domain experts is given by \citet{Garthwaite2005} and \citet{OHagan2006}. These references cover the importance of preparing and educating experts prior to an elicitation session, identify the need to clearly elucidate the targets of an elicitation session, and compare the advantages and disadvantages of choices of elicitation protocols. 
+
+A subcategory of elicitation procedures focuses on targeting potentially observable quantities that arise from a parameteric model instead of targeting elicitation on the parameter directly. This form of elicitation may be referred to as ``indirect'' elicitation \citep{Winkler1967}. For example, rather than eliciting a distribution for a binomial probability parameter directly, an expert may instead be asked to consider hypothetical observations, which are then used to infer a subjective probability distribution for the probability parameter. 
+
+An important application area of indirect elicitation is the prior elicitation for regression models \citep{LowChoy2009}. Generally, it is thought that indirect elicitation is an easier task compared to an attempted direct assessment of multi-dimensional probability distributions for the unknown parameters \citep{Kadane1980, OHagan2006}. For binomial regression models, software is available from the author \citep{James2010}. \citet{LowChoy2010} describe an extension of this software that implements the Conditional Mean Prior (CMP) approach of \citet{Bedrick1996} for binomial regression models in a way that can apply to other generalised linear models \citep{LowChoy2012}. \citet{Garthwaite2013} also use the CMP approach to elicit multivariate normal priors for generalised linear models, which has associated software available for download (\url{http://statistics.open.ac.uk/elicitation}). This approach elicits quantiles for the expected response of a generalised linear model. A drawback is that no interactions among the covariates are allowed to influence the response. \citet{Elfadaly2015} discuss an extension of the software to gamma regression and the normal linear model. At this time, no \code{R} packages other than \code{indirect} exist for indirect elicitation of generalised linear models.
+
+The scope of the package \code{indirect} is focussed on supporting the elicitation session, recording of results and reporting summaries for indirect elicitation of multivariate normal priors for generalised linear models. All functions in package \pkg{indirect} are implemented using the \proglang{R} system for statistical computing \cite{R2017}. \proglang{R} is available from the comprehensive \proglang{R} archive network (CRAN, \url{http://CRAN.R-project.org/}), which is distributed under the terms of the GNU General Public License, either Version 2 (GPL-2) or Version 3 (GPL-3). The \pkg{indirect} package is available from CRAN under the GPL-3 license \citep{Hosack2018}.
+
+\section{Generalised linear model}\label{sec:GLM}
+
+The generalised linear model (GLM) has three components \citep{McCullagh1989}:
+\begin{enumerate}
+\item An \emph{observation model}, $p(y_i | \theta_i, \xi)$, for data $y_i$ conditional on the expected response  $\mathrm{E}\left[y_i\right] = \theta_i$ at each design point, $i = 1,\ldots, n$. The observation model is chosen from the exponential family and may include additional parameters $\xi$.
+\item The \emph{linear predictor},
+\begin{equation}
+\eta_i = x_i^{\top}\beta,\label{eq:linpred}
+\end{equation}
+where the $p\times 1$ vector $x_i$ may encode continuous or categorical covariates at the $i$\textsuperscript{th} design point, and $\beta$ is the $p \times 1$ vector of unknown parameters.
+\item An invertible \emph{link function}, $g(\theta_i) = \eta_i$, that models the relationship between the expected response and the linear predictor.
+\end{enumerate}
+
+\section{Independent conditional mean priors}
+
+A proper prior for the unknown parameters, $p(\beta)$ is sought, which can take various forms. However, direct elicitation of the parameters $\beta$ would be exceedingly difficult for experts. An alternative approach indirectly elicits the prior $p(\beta)$ given subjective probability distributions elicited on an interpretable scale. The mean response $\theta_i$ usually is accessible to experts in terms of units and definition. For example, the response $\theta_i$ may be a percentage, a probability, an abundance, or a density given known covariates $x_i^\top$.  The task is then to elicit independent conditional mean priors for the mean response $\theta_i$ at each design point or scenario $x_i^\top$, $i = 1, \ldots, n$. In particular, specifying a normal prior for $\beta$ induces a class of independent conditional mean priors within the generalised linear model framework \citep{Bedrick1996}. In many statistical applications a normal prior is specified \citep{Garthwaite2013, Hosack2017}, $p(\beta) = N(\mu, \Sigma)$, and this is the basic assumption used in package \pkg{indirect}. 
+
+\subsection{Specifying the design matrix}
+
+The design points (scenarios) $x_i^{\top}$ for $i = 1, \ldots, n$ compose the rows of the $n\times p$ design matrix $X$. The matrix $X$  is assumed to have full column rank $p \leq n$. Given a normal prior fixed for $\beta$, the independence property for the conditional mean priors does not hold for all possible choices of the design matrix $X$. Nevertheless, the independence assumption is often reasonable if the design points are spread out in a certain sense \citep{Bedrick1996}. Optimal design, such as using balanced designs, can be used to assist with this objective \citep{Hosack2017}. In general, the design matrix may be arbitrary and include interactions or basis functions.
+
+A suggested diagnostic for general $X$ is the condition number of a rescaled design matrix $X_s$ where each column of $X$ is scaled to unit length \citep{Bedrick1996}. This diagnostic is implemented with function \code{CNdiag} in package \pkg{indirect}. A large condition number $\kappa(X_s)$ may suggest, but does not necessarily indicate, dependency in the design matrix \citep{Belsley2005}. For the linear system 
+\begin{equation}
+\eta = X\beta,
+\end{equation}
+\cite{Thisted1988} notes that if $X$ and $\eta$ ``are `good to $t$ decimal places', then the solution to the linear system [$\beta$] may only be good to $t - \log_{10}(\kappa(X))$ decimal places''. Note that this interpretation should here be applied on the scale of the linear predictor $\eta$.
+
+For example, consider a balanced design that specifies one design point to each of three categorical variables. This produces a low condition number.
+<<balanced,echo=TRUE>>=
+X <- matrix(c(rep(1, 3), c(0, 1, 0), c(0, 0, 1)), nrow = 3,
+            dimnames = list(designPt = 1:3,paste0("covar", 1:3)))
+X
+indirect::CNdiag(X)
+@
+The above example is also D-optimal if the second and third covariates are instead continuous. Contrast the above result with a suboptimal design, where the second column (covariate) of the design matrix, now continuous, has been adjusted so that the second and third design points (i.e., the second and third rows of $X$) are very close to each other in the design space.
+<<unbalanced, echo=TRUE>>=
+X <- matrix(c(rep(1, 3), c(0, 0.1, 0.9), c(0, 0, 1)), nrow = 3,
+            dimnames = list(designPt = 1:3, paste0("covar", 1:3)))
+X
+indirect::CNdiag(X)
+@
+The condition number diagnostic has increased. The relatively high condition number indicates that the design points may not be sufficiently spread out in the latter example.
+
+\subsection{Eliciting independent conditional mean priors}
+
+Conditional on a given scenario described by the design point $x_i^{\top}$, the elicitation exercise seeks to elicit from the expert a subjective probability distribution for the expected response $\theta_i$. Again the elicitation target $\theta_i$ typically is chosen to represent an interpretable quantity to an expert and is so defined on a scale familiar to the expert, e.g., in units of proportion, probability, abundance or density \citep{Hosack2017}. Generally, the advice for efficient elicitation of a subjective probability distribution supports the elicitation of fractiles (equivalently, quantiles or percentiles) from experts instead of most likely estimates or moments such as means and variances \citep{Garthwaite2005, OHagan2006}. \citet{Garthwaite2013} elicits fractiles from experts in a conditional mean prior approach.  Fractiles are also the elicited quantities for the elicitation target $\theta_i$ in package \pkg{indirect}.
+ 
+For an arbitrary distribution function $F(t)$, the $q$\textsuperscript{th} fractile is defined as $f = F^{-1}(q)$. At each scenario, a finite set of $K$ fractiles is elicited from the expert\footnote{Typically $K$ is a small number. Many strategies for choosing the set of fractiles to elicit have been proposed in the literature. Several of these approaches are supported by package \pkg{indirect}; further discussion is postponed until Section \ref{sec:fractiles}. For the moment, assume that a set of $K$ fractiles have been elicited.}. Form the vector $f = [f_1, \ldots, f_K]^\top$ with associated probabilities $q = [q_1, \ldots, q_K]^\top$, where $q_k = F(f_k)$ for $k = 1, \ldots, K$.\footnote{The dependence of the fractiles $f$ and associated probabilities $q$ on the $i$\textsuperscript{th} design point is suppressed here to simplify notation.} These fractiles are used to bound $K + 1$ bins, $B_k$, $k = 1, \ldots, K + 1$, where each $B_k$ is a real interval and Lebesgue measurable. The bins have bounds $(-\infty, f_1]$ for $B_1$, bounds $(f_{k-1}, f_k]$ for $1 < k \leq K$, and bounds $(f_K, \infty)$ for $k = K + 1$. The collection of bins $\left\{B_k, k = 1, \ldots, K + 1\right\}$ forms a discrete set. The elicited distribution $P_e$ is approximated by assigning probability $p_1 = q_1$ to bin $B_1$, probability $p_k = q_k - q_{k - 1}$ to $B_k$ for $1 < k \leq K$ and probability $p_{K+1} = 1 - q_K$ to bin $B_{K+1}$. The elicited distribution is thus essentially approximated by a histogram, with the bins defined by the support of the target distribution and the bounds of the elicited credible intervals.
+
+The goal is to derive a normal prior for the unknown coefficients $\beta$. A normal distribution is therefore elicited on the linear predictor scale. This process begins by transforming the fractiles $f$ through the monontonic link function $g(\cdot)$. For a given normal distribution $P_s(\eta_i)$ with mean $m_i$ and variance $v_i$, an approximation to the elicited probability intervals is constructed. This normal distribution assigns probability $\rho_1 = \int_{-\infty}^{g(f_1)} N(t|m_i, v_i) dt$ to $B_1$, probability $\rho_k = \int_{g(f_{k-1})}^{g(f_k)} N(t|m_i, v_i) dt$ to $B_k$ for $1 < k \leq K$ and probability $\rho_{K+1} = \int_{g(f_{K})}^{\infty} N(t|m_i, v_i) dt$ to $B_{K+1}$.
+
+Normal distributions have been fitted to elicited credible intervals using various techniques \citep{OHagan2006}. An optimisation of the parameters $m_i$ and $v_i$ requires the specification of an objective function. One possibility is least squares \citep{OHagan2006}, which corresponds to choosing $m_i$ and $v_i$ such that the sum of squares
+\begin{equation}
+\sum_k^{K + 1} \left(p_k - \rho_k\right)^2
+\end{equation}
+is minimised\footnote{The dependence of $\rho_k$ on $m_i$ and $v_i$ is suppressed to simplify notation.}. This objective function is supported by \pkg{indirect}. 
+
+Another possibility is to minimise the Kullback-Leibler divergence from the unknown elicited distribution $P_e$, which is described only by the raw elicited fractiles, to the parametric subjective probability distribution $P_s$ \citep{Hosack2017}. This approach seeks to minimise the loss from reporting $P_s$ if $P_e$ is true under a logarithmic utility function. The objective function is given by a discretised approximation to the Kullback--Leibler divergence,
+\begin{equation}
+KL(P_e : P_s) = \int\log\frac{dP_e}{dP_s}dP_e \approx \sum_k^{K + 1} \log\left(\frac{p_k}{\rho_k}\right)p_k.
+\end{equation}
+The discretised approximation generally results in a loss of information \citep{Kullback1997}. Subject to regularity conditions, the information loss can be reduced to an arbitrarily small amount by further partioning \citep{Kale1964}, that is, increasing the number of elicited fractiles $K$. This approximate Kullback-Leibler divergence objective function was implemented by \cite{Hosack2017} and is also supported by \pkg{indirect}.
+
+\subsection{Which fractiles to elicit?}\label{sec:fractiles}
+
+In practice, only a small number of fractiles is pragmatic to elicit. The following strategies are supported:
+\begin{itemize}
+\item Any arbitrary central credible interval, which may either be preset by the facilitator or chosen by the expert. The probability associated with the central credible interval is allowed to vary by design point.
+\item Any central credible interval and also the median. This allows the inclusion of the median as a central point estimate, which is used for example by the method of bisection \citep{Garthwaite2005}, see also \cite{Hosack2017} for an example using indirect elicitation. 
+\end{itemize}
+The latter method elicts more data than free parameters. \cite{OHagan2006} calls this process ``overfitting'', and argues that overfitting allows the expert to more critically assess an approximating parametric distribution. The elicited fractiles $f$ are a step towards this goal, and may well be adjusted several times until the expert judges the distribution $P_s(\theta)$, which is the distribution $P_s(\eta)$ transformed by the inverse link function $g^{-1}(\cdot)$, to be an acceptable representation of their belief. \textbf{Always remember that the subjective probability distribution $P_s$, which is a normal distribution on the linear predictor scale determined by the invertible link function $g(\cdot)$, is ultimately the elicited ``data''.} The package \pkg{indirect} provides both graphical and numerical feedback to the expert to facilitate this process of constructing an acceptable subjective probability distribution (see Section \ref{sec:illustrations} for illustrations).
+
+\subsection{The induced prior}
+
+The independent conditional mean prior is normally distributed on the linear predictor scale, $p(\eta) = N(\eta| m, V)$, with location vector $m = [m_1, \ldots, m_N]^\top$ and diagonal covariance matrix $V = \textrm{diag}[v_1, \ldots, v_N]$. Conditional on the elicited data and a design matrix $X$ of full column rank, the probability distribution of $\eta$ is given by,
+	\begin{align}
+	\prod_{i=1}^n p\left(\eta_i | m_i, v_i\right) &= \prod_{i=1}^n p\left(\left. x_i^\top\beta \right| m_i, v_i\right) \nonumber\\
+	&\propto \exp\left\{-\frac{1}{2}\sum_{i=1}^n v_i^{-1}(x_i^\top\beta - m_i)^2\right\} \nonumber\\
+	&= \exp\left\{-\frac{1}{2}\mathrm{Tr}\left[V^{-1} (X\beta - m)(X\beta - m)^\top\right]\right\}\nonumber\\
+	&= \exp\left\{-\frac{1}{2}(X\beta - m)^\top V^{-1}(X\beta - m)\right\},\label{eq:kernel}
+	\end{align}
+which is proportional to the exponential of a quadratic form in $\beta$. 
+
+The distribution for the unknown $\beta$ conditional on $m$ and $V$ is proportional to the multivariate normal distribution, 
+	\begin{align}
+p(\beta | m, V) 
+	\propto& \exp\left\{-\frac{1}{2}\left[\beta^\top X^\top V^{-1}X \beta - 2m^\top V^{-1}X\beta\right] \right\} \nonumber\\
+	=& \exp\left\{-\frac{1}{2}\left(\beta - \mu\right)^\top \Sigma^{-1} \left(\beta - \mu\right)\right.%\nonumber\\
+	+ \frac{1}{2}\left. X^\top V^{-1}m\left(X^\top V^{-1}X\right)^{-1}m^\top V^{-1}X\right\}.\nonumber
+	\end{align}		
+Given the assumptions of a normally distributed independent conditional mean prior, the induced normal prior on the unknown coefficients of the generalised linear model is given by,
+\begin{equation}
+p(\beta) = N(\beta | \mu, \Sigma)
+\end{equation}
+where $\mu = (X^\top V^{-1}X)^{-1}X^\top V^{-1}m$ and $\Sigma = (X^\top V^{-1} X)^{-1}$ \citep{Bedrick1996, Hosack2017}.
+Given the proper prior $p(\beta)$, the Bayesian update
+\begin{equation}
+p(\beta | y_1, y_2, \ldots, y_{L}) \propto p(y_{L} | y_1, \ldots, y_{L-1}, \beta)p(y_{L-1} | y_1, \ldots, y_{L-2}, \beta)\ldots p(y_1|\beta)p(\beta),
+\end{equation}
+can now be obtained for future empirical observations $y_l$, $l = 1, \ldots, L$. 
+
+\section{Illustrative example}\label{sec:illustrations}
+
+There are 3 categories of functions in package \pkg{indirect}:
+\begin{enumerate}
+\item Elicitation functions that do the following:
+  \begin{itemize}
+    \item specify the problem structure, for example, the design points and link function, and
+    \item assimilate expert statements in the form of fractiles, percentiles or quantiles (note that all of these terms are equivalent) into this problem structure.
+  \end{itemize}
+\item Fitting functions that map expert statements into models of the expert opinion; many of these are helper functions that typically do not to be accessed by the user.
+\item Plotting functions that provide graphical and numerical feedback to expert(s) during the course of the elicitation session.
+\end{enumerate}
+An example illustration is given here. The demonstration creates an artificial expert that understands the system perfectly. That is, the expert believes in the true model and is able to specify the distribution of $\beta$, independent design points $X$ and the correct link function. Obviously this will not happen in nature and this example is intended to simply illustrate the proof of concept.
+
+<<r>>=
+
+set.seed(100)
+
+# number of covariates
+p <- 5
+
+# mean  beta
+mu <- rnorm(p)
+
+# simulate covariance matrix from inverse Wishart
+# identity scale and p + 5 d.f. nu
+alpha <- MASS::mvrnorm(p + 5, mu = rep(0, p), Sigma = diag(p)*50)
+initial.icov <- t(alpha[1, , drop = FALSE])%*%alpha[1, , drop = FALSE]
+for (i in 2:ncol(alpha)) {
+  initial.icov <- initial.icov + 
+    + t(alpha[i, , drop = FALSE])%*%alpha[i, , drop = FALSE]
+}
+Sigma <- chol2inv(chol(initial.icov))
+
+# Design with independence priors:
+# the following choice of design matrix produces
+# independent conditional mean priors.
+# Of course, in a real elicitation session the prior
+# for beta is unknown and so this example is only for illustration.
+# This implements an Independent Conditional Mean prior as
+# defined by Bedrick et al. (1996), p. 1458.
+P <- diag(p) # identity matrix used (could use any orthogonal transformation)
+X <- P%*%solve(t(chol(Sigma)))
+D <- diag(1/rnorm(p, -X%*%mu, 0.5)) # arbitrary diagonal matrix
+X <- round(D%*%X, digits = 6)
+rownames(X) <- paste("DesignPt", 1:nrow(X))
+colnames(X) <- paste("Covariate", 1:ncol(X))
+X
+
+# elicited moments and quartiles
+g.m <- X%*%mu
+g.V <- X%*%Sigma%*%t(X)
+g.theta.median <- qnorm(0.5, g.m, sqrt(diag(g.V)))
+g.theta.lower <- qnorm(0.25, g.m, sqrt(diag(g.V)))
+g.theta.upper <- qnorm(0.75, g.m, sqrt(diag(g.V)))
+
+# The "perfect" elicitations are stored in the following matrix
+# perfect expert has cloglog link function
+perfect.elicitations <- 1 - exp(-exp(cbind(g.theta.lower, 
+                                           g.theta.median, g.theta.upper)))
+colnames(perfect.elicitations) <- c("lower", "median", "upper")
+perfect.elicitations
+@
+
+In the above, the elicitations are now recorded in the object \code{perfect.elicitations}. Of course, this is an artificial situation. In a real session, this elicited information could only be obtained by an exchange  between the facilitator and the expert. The package \code{indirect} facilitates this exchange  with a combination of iterative graphical and numerical  feedback. 
+
+Prior to the start of the elicitation session, it is a good idea to write out a \code{R} script that will serve as a reproducible transcript of the  session. The elicited data and comments contributed  by the  expert will then be edited into this \code{R} script. There are  also functions to store elicitation \code{R} objects created during the \code{R} session and, at the end of the session, share a summary of the session for the expert's own  records. In this way, the facilitator is cautiously using multiple mechanisms to document the valuable data created during the elicitation session.
+
+The \code{R} transcript begins  with a creation of an empty elicitation record using the function \code{designLink}. There is the  opportunity to add any introductory comments that may pertain to the session. The facilitator will later have  the option of producing a session report. This report will be processed using \code{Sweave}. The  comments  will be printed with a call to \code{Sexpr}, and so it is recommended that the comments only use ASCII text and avoid special characters.
+<<initial>>=
+# Initialise list with elicitation session information.
+# Here design is the same as X but not usually the case, that is,
+# the covariates presented to the expert may differ from
+# the model design due to transformations, contrasts and coding.
+# Setting CI.prob = 1/2 specifies that 0.5 probability is allocated to the
+# central credible interval; the upper and lower bounds 
+# of the central CI are then the upper and lower quartiles.
+Z <- indirect::designLink(design = X, link = "cloglog", 
+  target = "Target", CI.prob = 1/2,
+  intro.comments = "This is a record of the elicitation session.",
+  expertID = "Expert", facilitator = "Facilitator", 
+  rapporteur = "none")
+Z
+@
+Now have a look at a plot for the first design point without any elicitations included. The plot will go to the current device, which may require resizing. Usually a plot with the default dimensions (7 inches for both width and height) is sufficient\footnote{RStudio is a good (free) IDE that supports convenient switching among script, R console and the graphical device (\url{https://www.rstudio.com/products/rstudio/download/}).}.
+\setkeys{Gin}{width=.8\textwidth} 
+\begin{center}
+<<r1,fig=TRUE,height=7,width=7, echo=TRUE>>=
+# elicitations
+# design point 1
+indirect::plotDesignPoint(Z, design.pt = 1)
+@
+\end{center}
+
+An example elicitation at the first design point is presented. This example applies the approach of \cite{Hosack2017}, which uses the method of bisection \citep{Garthwaite2005} followed by graphical and numerical feedback. This process iterates until the expert accepts the parameteric distibution as an adequate representation of their beliefs. The process begins by restricting the support of the plot to $(0, 1)$, which is appropriate given the complementary log log link, and eliciting the median, which was previously stored in the matrix \code{perfect.elicitations} above. The median is the value that the expert believes gives a $50/50$ chance (equivalently, a $1/2$ chance, equal odds or probability 0.5) of being above or below the target $\theta_i$.
+\setkeys{Gin}{width=.8\textwidth} 
+\begin{center}
+<<r1m,fig=TRUE,height=7,width=7,  echo=TRUE>>=
+# Example elicited fractiles are stored in perfect.elicitations
+# In a real application, median would be entered as a numeric scalar that was
+# contributed by the expert.
+# CI.prob was initially set by designLink
+Z <- indirect::elicitPt(Z, design.pt = 1, 
+                        lower.CI.bound = NA,
+                        median = perfect.elicitations[1, "median"],
+                        upper.CI.bound = NA,
+                        CI.prob = NULL)
+indirect::plotDesignPoint(Z, design.pt = 1,   
+  elicited.fractiles = TRUE, theta.bounds = c(0, 1))
+@
+\end{center}
+Next, the target $\theta_i$ is assumed to be below the median. Given this assumption, the expert is asked to provide the value that gives a 50/50 chance that the target is above or below; this value is equivalent to the lower quartile, $f_{1/4}$.
+\setkeys{Gin}{width=.8\textwidth} 
+\begin{center}
+<<r1l,fig=TRUE,height=7,width=7,  echo=TRUE>>=
+Z <- indirect::elicitPt(Z, design.pt = 1, 
+                        lower.CI.bound = perfect.elicitations[1, "lower"],
+                        median = perfect.elicitations[1, "median"],
+                        upper.CI.bound = NA)
+indirect::plotDesignPoint(Z, design.pt = 1,   
+  elicited.fractiles = TRUE, theta.bounds = c(0, 1))
+@
+\end{center}
+Next, the target $\theta_i$ is assumed to be above the median. Given this assumption, the expert is asked to provide the value that gives a 50/50 chance that the target is above or below; this value is equivalent to the upper quartile, $f_{3/4}$.
+\setkeys{Gin}{width=.8\textwidth} 
+\begin{center}
+<<r1u,fig=TRUE,height=7,width=7,  echo=TRUE>>=
+Z <- indirect::elicitPt(Z, design.pt = 1, 
+                        lower.CI.bound = perfect.elicitations[1, "lower"],
+                        median = perfect.elicitations[1, "median"],
+                        upper.CI.bound = perfect.elicitations[1, "upper"],
+                        comment = "No major comments.")
+indirect::plotDesignPoint(Z, design.pt = 1,   
+  elicited.fractiles = TRUE, theta.bounds = c(0, 1))
+@
+\end{center}
+These raw elicited fractiles are then compared to the fitted conditional normal that minimises the Kullback--Leibler divergence with partitioning based on the elicited fractiles. The approximation is exact in this example because the expert believes in the true model and reports their beliefs accurately. The subjective probability density function of the conditional normal is also plotted.
+\setkeys{Gin}{width=.8\textwidth} 
+\begin{center}
+<<r1a,fig=TRUE,height=7,width=7,  echo=TRUE>>=
+indirect::plotDesignPoint(Z, design.pt = 1,   
+  elicited.fractiles = TRUE, theta.bounds = c(0, 1),
+  fitted.fractiles = TRUE, fitted.curve = TRUE)
+@
+\end{center}
+Typically the parametric distribution matches the original elicited fractiles $f$ inexactly. In the overfitting process \citep{OHagan2006}, the fractiles $f$ are then iteratively adjusted until the fitted distribution and fractiles are acceptable to the expert as an adequate representation of their beliefs.
+
+The model is then used to predict out to the extreme deciles, that is, $f_{1/10}$ and $f_{9/10}$. This provides another check in the overfitting process.
+\setkeys{Gin}{width=.8\textwidth} 
+\begin{center}
+<<r1f,fig=TRUE,height=7,width=7,  echo=TRUE>>=
+indirect::plotDesignPoint(Z, design.pt = 1,   
+  elicited.fractiles = TRUE, theta.bounds = c(0, 1),
+  fitted.fractiles = c(1/10, 1/4, 1/2, 3/4, 9/10), fitted.curve = TRUE)
+@
+\end{center}
+Sometimes the estimated (fitted) cumulative probabilities for different values of the target $\theta_i$ are of interest. For example, the cumulative probabilities $P_s(\theta_i = 1/3)$ and $P_s(\theta_i = 1/2)$ can be estimated using the \code{estimated.probs} argument as follows.
+\begin{center}
+<<r1p,fig=TRUE,height=7,width=7,  echo=TRUE>>=
+indirect::plotDesignPoint(Z, design.pt = 1,   
+  elicited.fractiles = TRUE, theta.bounds = c(0, 1),
+  fitted.fractiles = c(1/10, 1/4, 1/2, 3/4, 9/10), fitted.curve = TRUE,
+  estimated.probs = c(1/3, 0.5))
+@
+\end{center}
+The estimated probabilities are printed to the \code{R} console. The raw fractiles may require further adjustment at this point. Once the fitted subjective probability distribution is deemed acceptable by the expert then the elicitation proceeds to the next design point.
+
+At the second design point, say the expert suddenly wished  to switch to an alternative method with reference to tertiles,  $f_{1/3}$ and lower $f_{2/3}$, rather than  quartiles. Further, the expert wished to contribute only the upper and lower tertiles without explicit reference to the median. With this approach, the expert will contribute two fractiles that divide the support of the target into intervals of equal probability or odds (each probability interval above, below, and between the elicited fractiles will have probability $1/3$). Suppose that these changes  were accepted by the elicitation protocol. The changes can be accommodated in the following way. 
+\begin{center}
+<<d2,fig=TRUE,height=7,width=7,  echo=TRUE>>=
+# Pefect elicitations now moving to tertiles for the second design point
+g.tertiles.d2 <- qnorm(c(1/3, 2/3), g.m[2], sqrt(g.V[2, 2]))
+# inverse link function
+theta.tertiles.d2 <- 1 - exp(-exp(c(g.tertiles.d2)))
+
+# tertiles only elicited without median
+Z <- indirect::elicitPt(Z, design.pt = 2, CI.prob = 1/3,
+                        lower.CI.bound = theta.tertiles.d2[1],
+                        upper.CI.bound = theta.tertiles.d2[2],
+     comment = "Switched to tertile method without median.")
+indirect::plotDesignPoint(Z, design.pt = 2,   
+  elicited.fractiles = TRUE, theta.bounds = c(0, 1),
+  fitted.fractiles = c(1/10, 1/3, 1/2, 2/3, 9/10), fitted.curve = TRUE)
+@
+\end{center}
+Only the current design point has the central credible interval set to probability $1/3$.
+
+<<d2n,echo=TRUE>>=
+Z$theta
+@
+Once this subjective probability distribution is deemed acceptable by the expert then the elicitation proceeds to the next design point, and so on for each design point $x_i^\top$, $i = 1, \ldots, n$. 
+<<all,echo=TRUE>>=
+# All remaining elicitations are entered into the record 
+# for this artificial elicitation example
+Z$theta[3:nrow(perfect.elicitations), 1:3] <- 
+  perfect.elicitations[3:nrow(perfect.elicitations), ]
+@
+The elicited prior for this particular model can then be obtained with the function \code{muSigma}. 
+<<muSig>>=
+prior <- indirect::muSigma(Z, X = Z$design)
+prior
+# compare with original prior parameters defined above
+all.equal(as.numeric(prior$mu), mu)
+all.equal(prior$Sigma, Sigma, check.attributes = FALSE) # a small number
+@
+Alternative models may also be considered so long as the information coded in the model matrix $X$ matches with what was presented to the expert via the argument \code{design} in the function \code{designLink}. 
+
+This would conclude the elictation session for the perfect expert, which recovers the correct prior. In reality,  such a situation is unobtainable. An example is given where the perfect expert elicitation is jittered, so that it is no longer exactly correct. By setting \code{theta.bounds = NULL}, the plot bounds are allowed to automatically adjust to the credible interval of the elicited subjective probability distribution. The bounds of the credible interval are specified by \code{cumul.prob.bounds}, with default interval given by $(0.05, 0.95)$.
+\begin{center}
+<<dln,fig=TRUE,height=7,width=7,  echo=TRUE>>=
+# perfect elicitions for design point 5
+perfect.elicitations[5, ]
+# jittered elicitations
+d5.jittered <- c(0.2, 0.3, 0.35)
+
+# plot jittered elicitation
+Z <- indirect::elicitPt(Z, design.pt = 5, 
+                        lower.CI.bound = d5.jittered[1],
+                        median = d5.jittered[2],
+                        upper.CI.bound = d5.jittered[3],
+                        comment = "Jittered elicitation.")
+indirect::plotDesignPoint(Z, design.pt = 5,   
+  elicited.fractiles = TRUE, theta.bounds = NULL, 
+  cumul.prob.bounds = c(0.05, 0.95),
+  fitted.fractiles = c(1/10, 1/4, 1/2, 3/4, 9/10), 
+  fitted.curve = TRUE
+)
+@
+\end{center}
+
+To conclude the session, the facilitator should ask the expert if there are further questions. After confirmation with the expert, the record can be saved using the function \code{saveRecord}. This will save the record as a \code{RDS} object using the base \code{R} function \code{saveRDS}.
+<<save, echo = TRUE, eval = FALSE>>=
+# Not run:
+# for this example, create a temporary directory to store record
+tmp.rds <- tempfile(pattern = "record", fileext =".rds")
+# save record to this directory
+indirect::saveRecord(Z, 
+  conclusion.comments = "This concludes the elicitation record.",
+  file = tmp.rds)
+@
+A summary record  of the elicitation session can be shared with the expert by function \code{makeReport} that automatically generates a pdf document in the current working directory. The \code{makeSweave} function sources the elicitation record from the saved \code{rds} file and creates a \code{.Rnw} file. This latter file may be processed by the \code{utils::Sweave} and \code{tools::texi2pdf} functions to create a \code{.pdf} document.
+<<share, echo = TRUE, eval = FALSE>>=
+# Not run:
+# change working directory to where the record RDS object was stored
+tmpReport <- tempfile(pattern = "SessionSummary")
+indirect::makeSweave(filename.rds = tmp.rds, 
+           reportname = tmpReport,
+           title = "Elicitation session record", 
+           contact.details = "contact at email address",
+           fitted.fractiles = c(1/10, 1/4, 1/2, 3/4, 9/10))
+setwd(tempdir())
+utils::Sweave(paste0(tmpReport, ".Rnw"))
+tools::texi2pdf(paste0(tmpReport, ".tex"))
+@
+The function \code{makeReport} saves pdf files of all figures and the summary report document into the current working directory.
+
+\section{Summary} \label{sec:summary}
+
+This introduction to the \proglang{R} package \pkg{indirect} \citep{Hosack2018} describes the motivation and methods of the functionality provided to support the indirect prior elicitation of multivariate normal priors for generalised linear models. Several approaches to elicitation of central credible intervals within a generalised linear model framework are supported, including versions of the approach of \cite{Hosack2017}. The goal is to elicit subjective probabilities conditional on different combinations of covariate values at specified design points, or ``scenarios''. These subjective probabilities subsequently induce a multivariate normal prior for a generalised linear model. Alternative choices of design matrix may be explored outside of the elicitation session without violating the elicitation protocol, as long as the alternative models agree with the information provided to the expert during the session for each design point and the link function is unaltered. Currently the identity, logit, complementary log log, and log link functions are supported. The basic options for this indirect elictation approach are described here with examples of code usage.
+
+\section*{Acknowledgments}
+
+The author thanks Keith Hayes and Adrien Ickowicz for their helpful feedback.
+
+\bibliography{indirect}
+
+
+\end{document}

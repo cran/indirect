@@ -1,0 +1,23 @@
+#' indirect: A package for assisting indirect elicitation.
+#' 
+#' The \code{indirect} package provides three categories of functions: elicitation
+#' functions, fitting functions and visualisation functions.
+#' 
+#' @section Elicitation functions: These are the functions that are used to 
+#'   record expert opinion. This is where edits will be made and so on. The key 
+#'   function is \code{\link{designLink}}, which defines a list object that contains
+#'   information about the design and elicitation. The elicitations are recorded and updated
+#'   via function \code{\link{elicitPt}}.
+#' @section Fitting functions: These are generally helper functions. This 
+#'   includes \code{\link{mV}} for the elicited moments of the MVN prior and 
+#'   \code{\link{muSigma}} for estimating the mean vector and covariance 
+#'   matrix of the unknown coefficients, along with other helper functions.
+#' @section Visualisation functions: These are functions for visualisation. The
+#'   core function is \code{\link{plotDesignPoint}}.
+#' @references Hosack, G. R., Hayes, K. R., & Barry, S. C. (2017). Prior elicitation 
+#' for Bayesian generalised linear models with application to risk control option assessment. 
+#' Reliability Engineering and System Safety, 167:351-361. doi:10.1016/j.ress.2017.06.011
+#'   
+#' @docType package
+#' @name indirect
+NULL
