@@ -37,7 +37,7 @@ p <- 5
 mu <- rnorm(p)
 
 # simulate covariance matrix from inverse Wishart
-# identity scale and p + 5 d.f. nu
+# diagonal scale matrix and p + 5 d.f. nu
 alpha <- MASS::mvrnorm(p + 5, mu = rep(0, p), Sigma = diag(p)*50)
 initial.icov <- t(alpha[1, , drop = FALSE])%*%alpha[1, , drop = FALSE]
 for (i in 2:ncol(alpha)) {
@@ -247,13 +247,13 @@ indirect::plotDesignPoint(Z, design.pt = 5,
 ### code chunk number 19: share (eval = FALSE)
 ###################################################
 ## # Not run:
-## # change working directory to where the record RDS object was stored
 ## tmpReport <- tempfile(pattern = "SessionSummary")
 ## indirect::makeSweave(filename.rds = tmp.rds, 
 ##            reportname = tmpReport,
 ##            title = "Elicitation session record", 
 ##            contact.details = "contact at email address",
 ##            fitted.fractiles = c(1/10, 1/4, 1/2, 3/4, 9/10))
+## # change working directory to where the record RDS object was stored
 ## setwd(tempdir())
 ## utils::Sweave(paste0(tmpReport, ".Rnw"))
 ## tools::texi2pdf(paste0(tmpReport, ".tex"))

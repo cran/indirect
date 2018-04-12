@@ -40,11 +40,11 @@ options(prompt = "R> ", continue = "+   ")
 
 The \code{R} package \pkg{indirect} is introduced to support the elicitation of multivariate normal priors for generalised linear models. Key guidance for the general elicitation of subjective probability distributions from domain experts is given by \citet{Garthwaite2005} and \citet{OHagan2006}. These references cover the importance of preparing and educating experts prior to an elicitation session, identify the need to clearly elucidate the targets of an elicitation session, and compare the advantages and disadvantages of choices of elicitation protocols. 
 
-A subcategory of elicitation procedures focuses on targeting potentially observable quantities that arise from a parameteric model instead of targeting elicitation on the parameter directly. This form of elicitation may be referred to as ``indirect'' elicitation \citep{Winkler1967}. For example, rather than eliciting a distribution for a binomial probability parameter directly, an expert may instead be asked to consider hypothetical observations, which are then used to infer a subjective probability distribution for the probability parameter. 
+A subcategory of elicitation procedures focuses on targeting potentially observable quantities that arise from a parametric model instead of targeting elicitation on the parameter directly. This form of elicitation may be referred to as ``indirect'' elicitation \citep{Winkler1967}. For example, rather than eliciting a distribution for a binomial probability parameter directly, an expert may instead be asked to consider hypothetical observations, which are then used to infer a subjective probability distribution for the probability parameter. 
 
 An important application area of indirect elicitation is the prior elicitation for regression models \citep{LowChoy2009}. Generally, it is thought that indirect elicitation is an easier task compared to an attempted direct assessment of multi-dimensional probability distributions for the unknown parameters \citep{Kadane1980, OHagan2006}. For binomial regression models, software is available from the author \citep{James2010}. \citet{LowChoy2010} describe an extension of this software that implements the Conditional Mean Prior (CMP) approach of \citet{Bedrick1996} for binomial regression models in a way that can apply to other generalised linear models \citep{LowChoy2012}. \citet{Garthwaite2013} also use the CMP approach to elicit multivariate normal priors for generalised linear models, which has associated software available for download (\url{http://statistics.open.ac.uk/elicitation}). This approach elicits quantiles for the expected response of a generalised linear model. A drawback is that no interactions among the covariates are allowed to influence the response. \citet{Elfadaly2015} discuss an extension of the software to gamma regression and the normal linear model. At this time, no \code{R} packages other than \code{indirect} exist for indirect elicitation of generalised linear models.
 
-The scope of the package \code{indirect} is focussed on supporting the elicitation session, recording of results and reporting summaries for indirect elicitation of multivariate normal priors for generalised linear models. All functions in package \pkg{indirect} are implemented using the \proglang{R} system for statistical computing \cite{R2017}. \proglang{R} is available from the comprehensive \proglang{R} archive network (CRAN, \url{http://CRAN.R-project.org/}), which is distributed under the terms of the GNU General Public License, either Version 2 (GPL-2) or Version 3 (GPL-3). The \pkg{indirect} package is available from CRAN under the GPL-3 license \citep{Hosack2018}.
+The scope of the package \code{indirect} is focused on supporting the elicitation session, recording of results and reporting summaries for indirect elicitation of multivariate normal priors for generalised linear models. All functions in package \pkg{indirect} are implemented using the \proglang{R} system for statistical computing \cite{R2017}. \proglang{R} is available from the comprehensive \proglang{R} archive network (CRAN, \url{http://CRAN.R-project.org/}), which is distributed under the terms of the GNU General Public License, either Version 2 (GPL-2) or Version 3 (GPL-3). The \pkg{indirect} package is available from CRAN under the GPL-3 license \citep{Hosack2018}.
 
 \section{Generalised linear model}\label{sec:GLM}
 
@@ -95,7 +95,7 @@ Conditional on a given scenario described by the design point $x_i^{\top}$, the 
  
 For an arbitrary distribution function $F(t)$, the $q$\textsuperscript{th} fractile is defined as $f = F^{-1}(q)$. At each scenario, a finite set of $K$ fractiles is elicited from the expert\footnote{Typically $K$ is a small number. Many strategies for choosing the set of fractiles to elicit have been proposed in the literature. Several of these approaches are supported by package \pkg{indirect}; further discussion is postponed until Section \ref{sec:fractiles}. For the moment, assume that a set of $K$ fractiles have been elicited.}. Form the vector $f = [f_1, \ldots, f_K]^\top$ with associated probabilities $q = [q_1, \ldots, q_K]^\top$, where $q_k = F(f_k)$ for $k = 1, \ldots, K$.\footnote{The dependence of the fractiles $f$ and associated probabilities $q$ on the $i$\textsuperscript{th} design point is suppressed here to simplify notation.} These fractiles are used to bound $K + 1$ bins, $B_k$, $k = 1, \ldots, K + 1$, where each $B_k$ is a real interval and Lebesgue measurable. The bins have bounds $(-\infty, f_1]$ for $B_1$, bounds $(f_{k-1}, f_k]$ for $1 < k \leq K$, and bounds $(f_K, \infty)$ for $k = K + 1$. The collection of bins $\left\{B_k, k = 1, \ldots, K + 1\right\}$ forms a discrete set. The elicited distribution $P_e$ is approximated by assigning probability $p_1 = q_1$ to bin $B_1$, probability $p_k = q_k - q_{k - 1}$ to $B_k$ for $1 < k \leq K$ and probability $p_{K+1} = 1 - q_K$ to bin $B_{K+1}$. The elicited distribution is thus essentially approximated by a histogram, with the bins defined by the support of the target distribution and the bounds of the elicited credible intervals.
 
-The goal is to derive a normal prior for the unknown coefficients $\beta$. A normal distribution is therefore elicited on the linear predictor scale. This process begins by transforming the fractiles $f$ through the monontonic link function $g(\cdot)$. For a given normal distribution $P_s(\eta_i)$ with mean $m_i$ and variance $v_i$, an approximation to the elicited probability intervals is constructed. This normal distribution assigns probability $\rho_1 = \int_{-\infty}^{g(f_1)} N(t|m_i, v_i) dt$ to $B_1$, probability $\rho_k = \int_{g(f_{k-1})}^{g(f_k)} N(t|m_i, v_i) dt$ to $B_k$ for $1 < k \leq K$ and probability $\rho_{K+1} = \int_{g(f_{K})}^{\infty} N(t|m_i, v_i) dt$ to $B_{K+1}$.
+The goal is to derive a normal prior for the unknown coefficients $\beta$. A normal distribution is therefore elicited on the linear predictor scale. This process begins by transforming the fractiles $f$ through the monotonic link function $g(\cdot)$. For a given normal distribution $P_s(\eta_i)$ with mean $m_i$ and variance $v_i$, an approximation to the elicited probability intervals is constructed. This normal distribution assigns probability $\rho_1 = \int_{-\infty}^{g(f_1)} N(t|m_i, v_i) dt$ to $B_1$, probability $\rho_k = \int_{g(f_{k-1})}^{g(f_k)} N(t|m_i, v_i) dt$ to $B_k$ for $1 < k \leq K$ and probability $\rho_{K+1} = \int_{g(f_{K})}^{\infty} N(t|m_i, v_i) dt$ to $B_{K+1}$.
 
 Normal distributions have been fitted to elicited credible intervals using various techniques \citep{OHagan2006}. An optimisation of the parameters $m_i$ and $v_i$ requires the specification of an objective function. One possibility is least squares \citep{OHagan2006}, which corresponds to choosing $m_i$ and $v_i$ such that the sum of squares
 \begin{equation}
@@ -103,20 +103,20 @@ Normal distributions have been fitted to elicited credible intervals using vario
 \end{equation}
 is minimised\footnote{The dependence of $\rho_k$ on $m_i$ and $v_i$ is suppressed to simplify notation.}. This objective function is supported by \pkg{indirect}. 
 
-Another possibility is to minimise the Kullback-Leibler divergence from the unknown elicited distribution $P_e$, which is described only by the raw elicited fractiles, to the parametric subjective probability distribution $P_s$ \citep{Hosack2017}. This approach seeks to minimise the loss from reporting $P_s$ if $P_e$ is true under a logarithmic utility function. The objective function is given by a discretised approximation to the Kullback--Leibler divergence,
+Another possibility is to minimise the Kullback-Leibler divergence from the parametric subjective probability distribution $P_s$ to the unknown elicited distribution $P_e$, which is described only by the raw elicited fractiles \citep{Hosack2017}. This approach seeks to minimise the loss from reporting $P_s$ if $P_e$ is true under a logarithmic utility function. The objective function is given by a discretised approximation to the Kullback--Leibler divergence,
 \begin{equation}
 KL(P_e : P_s) = \int\log\frac{dP_e}{dP_s}dP_e \approx \sum_k^{K + 1} \log\left(\frac{p_k}{\rho_k}\right)p_k.
 \end{equation}
-The discretised approximation generally results in a loss of information \citep{Kullback1997}. Subject to regularity conditions, the information loss can be reduced to an arbitrarily small amount by further partioning \citep{Kale1964}, that is, increasing the number of elicited fractiles $K$. This approximate Kullback-Leibler divergence objective function was implemented by \cite{Hosack2017} and is also supported by \pkg{indirect}.
+The discretised approximation generally results in a loss of information \citep{Kullback1997}. Subject to regularity conditions, the information loss can be reduced to an arbitrarily small amount by further partitioning \citep{Kale1964}, that is, increasing the number of elicited fractiles $K$. This approximate Kullback-Leibler divergence objective function was implemented by \cite{Hosack2017} and is also supported by \pkg{indirect}.
 
 \subsection{Which fractiles to elicit?}\label{sec:fractiles}
 
-In practice, only a small number of fractiles is pragmatic to elicit. The following strategies are supported:
+In practice, only a small number of fractiles are pragmatic to elicit. The following strategies are supported:
 \begin{itemize}
 \item Any arbitrary central credible interval, which may either be preset by the facilitator or chosen by the expert. The probability associated with the central credible interval is allowed to vary by design point.
 \item Any central credible interval and also the median. This allows the inclusion of the median as a central point estimate, which is used for example by the method of bisection \citep{Garthwaite2005}, see also \cite{Hosack2017} for an example using indirect elicitation. 
 \end{itemize}
-The latter method elicts more data than free parameters. \cite{OHagan2006} calls this process ``overfitting'', and argues that overfitting allows the expert to more critically assess an approximating parametric distribution. The elicited fractiles $f$ are a step towards this goal, and may well be adjusted several times until the expert judges the distribution $P_s(\theta)$, which is the distribution $P_s(\eta)$ transformed by the inverse link function $g^{-1}(\cdot)$, to be an acceptable representation of their belief. \textbf{Always remember that the subjective probability distribution $P_s$, which is a normal distribution on the linear predictor scale determined by the invertible link function $g(\cdot)$, is ultimately the elicited ``data''.} The package \pkg{indirect} provides both graphical and numerical feedback to the expert to facilitate this process of constructing an acceptable subjective probability distribution (see Section \ref{sec:illustrations} for illustrations).
+The latter method elicits more data than free parameters. \cite{OHagan2006} call this process ``overfitting'', and argues that overfitting allows the expert to more critically assess an approximating parametric distribution. The elicited fractiles $f$ are a step towards this goal, and may well be adjusted several times until the expert judges the distribution $P_s(\theta)$, which is the distribution $P_s(\eta)$ transformed by the inverse link function $g^{-1}(\cdot)$, to be an acceptable representation of their belief. \textbf{Always remember that the subjective probability distribution $P_s$, which is a normal distribution on the linear predictor scale determined by the invertible link function $g(\cdot)$, is ultimately the elicited ``data''.} The package \pkg{indirect} provides both graphical and numerical feedback to the expert to facilitate this process of constructing an acceptable subjective probability distribution (see Section \ref{sec:illustrations} for illustrations).
 
 \subsection{The induced prior}
 
@@ -172,7 +172,7 @@ p <- 5
 mu <- rnorm(p)
 
 # simulate covariance matrix from inverse Wishart
-# identity scale and p + 5 d.f. nu
+# diagonal scale matrix and p + 5 d.f. nu
 alpha <- MASS::mvrnorm(p + 5, mu = rep(0, p), Sigma = diag(p)*50)
 initial.icov <- t(alpha[1, , drop = FALSE])%*%alpha[1, , drop = FALSE]
 for (i in 2:ncol(alpha)) {
@@ -241,7 +241,7 @@ indirect::plotDesignPoint(Z, design.pt = 1)
 @
 \end{center}
 
-An example elicitation at the first design point is presented. This example applies the approach of \cite{Hosack2017}, which uses the method of bisection \citep{Garthwaite2005} followed by graphical and numerical feedback. This process iterates until the expert accepts the parameteric distibution as an adequate representation of their beliefs. The process begins by restricting the support of the plot to $(0, 1)$, which is appropriate given the complementary log log link, and eliciting the median, which was previously stored in the matrix \code{perfect.elicitations} above. The median is the value that the expert believes gives a $50/50$ chance (equivalently, a $1/2$ chance, equal odds or probability 0.5) of being above or below the target $\theta_i$.
+An example elicitation at the first design point is presented. This example applies the approach of \cite{Hosack2017}, which uses the method of bisection \citep{Garthwaite2005} followed by graphical and numerical feedback. This process iterates until the expert accepts the parametric distribution as an adequate representation of their beliefs. The process begins by restricting the support of the plot to $(0, 1)$, which is appropriate given the complementary log log link, and eliciting the median, which was previously stored in the matrix \code{perfect.elicitations} above. The median is the value that the expert believes gives a $50/50$ chance (equivalently, a $1/2$ chance, equal odds or probability 0.5) of being above or below the target $\theta_i$.
 \setkeys{Gin}{width=.8\textwidth} 
 \begin{center}
 <<r1m,fig=TRUE,height=7,width=7,  echo=TRUE>>=
@@ -354,7 +354,7 @@ all.equal(prior$Sigma, Sigma, check.attributes = FALSE) # a small number
 @
 Alternative models may also be considered so long as the information coded in the model matrix $X$ matches with what was presented to the expert via the argument \code{design} in the function \code{designLink}. 
 
-This would conclude the elictation session for the perfect expert, which recovers the correct prior. In reality,  such a situation is unobtainable. An example is given where the perfect expert elicitation is jittered, so that it is no longer exactly correct. By setting \code{theta.bounds = NULL}, the plot bounds are allowed to automatically adjust to the credible interval of the elicited subjective probability distribution. The bounds of the credible interval are specified by \code{cumul.prob.bounds}, with default interval given by $(0.05, 0.95)$.
+This would conclude the elicitation session for the perfect expert, which recovers the correct prior. In reality,  such a situation is unobtainable. An example is given where the perfect expert elicitation is jittered, so that it is no longer exactly correct. By setting \code{theta.bounds = NULL}, the plot bounds are allowed to automatically adjust to the credible interval of the elicited subjective probability distribution. The bounds of the credible interval are specified by \code{cumul.prob.bounds}, with default interval given by $(0.05, 0.95)$.
 \begin{center}
 <<dln,fig=TRUE,height=7,width=7,  echo=TRUE>>=
 # perfect elicitions for design point 5
@@ -387,21 +387,21 @@ indirect::saveRecord(Z,
   conclusion.comments = "This concludes the elicitation record.",
   file = tmp.rds)
 @
-A summary record  of the elicitation session can be shared with the expert by function \code{makeReport} that automatically generates a pdf document in the current working directory. The \code{makeSweave} function sources the elicitation record from the saved \code{rds} file and creates a \code{.Rnw} file. This latter file may be processed by the \code{utils::Sweave} and \code{tools::texi2pdf} functions to create a \code{.pdf} document.
+A summary record  of the elicitation session can be shared with the expert by function \code{makeSweave} that automatically generates a pdf document in the current working directory. The \code{makeSweave} function sources the elicitation record from the saved \code{rds} file and creates a \code{.Rnw} file. This latter file may be processed by the \code{utils::Sweave} and \code{tools::texi2pdf} functions to create a \code{.pdf} document.
 <<share, echo = TRUE, eval = FALSE>>=
 # Not run:
-# change working directory to where the record RDS object was stored
 tmpReport <- tempfile(pattern = "SessionSummary")
 indirect::makeSweave(filename.rds = tmp.rds, 
            reportname = tmpReport,
            title = "Elicitation session record", 
            contact.details = "contact at email address",
            fitted.fractiles = c(1/10, 1/4, 1/2, 3/4, 9/10))
+# change working directory to where the record RDS object was stored
 setwd(tempdir())
 utils::Sweave(paste0(tmpReport, ".Rnw"))
 tools::texi2pdf(paste0(tmpReport, ".tex"))
 @
-The function \code{makeReport} saves pdf files of all figures and the summary report document into the current working directory.
+The function \code{makeSweave} saves pdf files of all figures and the summary report document into the current working directory.
 
 \section{Summary} \label{sec:summary}
 

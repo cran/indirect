@@ -10,11 +10,11 @@ pdist(x, Z, design.pt = NULL, fit.method = "KL")
 \arguments{
 \item{x}{numeric: coordinate}
 
-\item{Z}{list of design points and link function, see \code{designLink()}}
+\item{Z}{list of design points and link function, see \code{\link{designLink}}}
 
 \item{design.pt}{integer: design point}
 
-\item{fit.method}{character: method for fit in \code{mV()}, default is \code{KL}}
+\item{fit.method}{character: method for fit in \code{\link{mV}}, default is \code{KL}}
 }
 \description{
 Helper function that gives the probability distribution function for design 

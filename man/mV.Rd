@@ -9,7 +9,7 @@ mV(Z, fit.method = "KL")
 }
 \arguments{
 \item{Z}{list object that contains matrix \code{theta} of elicitations and
-character \code{link}, see \code{plotDesignPoint()}}
+character \code{link}, see \code{\link{plotDesignPoint}}}
 
 \item{fit.method}{character, \code{moment}, \code{KL}, \code{SS}. Default is
 \code{KL}.}

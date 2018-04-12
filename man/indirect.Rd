@@ -4,7 +4,7 @@
 \name{indirect}
 \alias{indirect}
 \alias{indirect-package}
-\title{indirect: A package for assisting indirect elicitation.}
+\title{indirect: A package for assisting indirect elicitation of priors for generalised linear models.}
 \description{
 The \code{indirect} package provides three categories of functions: elicitation
 functions, fitting functions and visualisation functions.
@@ -18,10 +18,10 @@ functions, fitting functions and visualisation functions.
 }
 
 \section{Fitting functions}{
- These are generally helper functions. This 
-  includes \code{\link{mV}} for the elicited moments of the MVN prior and 
-  \code{\link{muSigma}} for estimating the mean vector and covariance 
-  matrix of the unknown coefficients, along with other helper functions.
+ These are generally helper functions except for the function 
+  \code{\link{muSigma}} that is used for estimating the mean vector and covariance 
+  matrix of the unknown coefficients for the multivariate normal prior. Helper functions 
+  include \code{\link{mV}} for the elicited moments of conditional means priors.
 }
 
 \section{Visualisation functions}{

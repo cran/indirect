@@ -1,29 +1,32 @@
 #' Plot elicited data, fitted marginals or model output
 #' 
 #' @param Z list object that contains matrix \code{theta} of elicitations,
-#'   character \code{link} and character \code{target}
+#'   character \code{link} and character \code{target} as initialised by
+#'   \code{\link{designLink}} and updated by \code{\link{elicitPt}}
 #' @param X design matrix (can be \code{NULL}, unless modelled output is
 #'   requested)
 #' @param design.pt single integer that denotes design point of interest
 #' @param elicited.fractiles logical, plot vertical lines for elicited 
 #'   fractiles?
-#' @param fitted.fractiles logical, plot vertical lines for fitted marginal 
-#'   fractiles? Alternatively, a numeric vector of arbitrary fractiles to be
+#' @param fitted.fractiles logical, plot vertical lines for fitted conditional
+#'   mean prior fractiles for this design point? Alternatively, a numeric vector of arbitrary fractiles to be
 #'   plotted from the fitted elicitation distribution. If \code{TRUE} then the
 #'   fractiles corresponding to the median, upper and lower level central CI
 #'   are plotted
-#' @param fitted.curve, logical plot fitted elicitation density?
+#' @param fitted.curve, logical plot fitted conditional mean prior density for this design point?
 #' @param CI.prob numeric scalar, locally specified probability assigned to the
 #'   elicited central credible interval of the current design point. Defaults to
 #'   \code{NULL} in which case the global value initially assigned by
-#'   \code{designLink()} is used
+#'   \code{\link{designLink}} or as updated by \code{\link{elicitPt}} is used
 #' @param estimated.probs numeric vector of values for which estimated
 #'  probabilities are to be estimated from the fitted elicitation 
 #'  distribution for the target theta. Default is \code{NULL}. 
 #'  The result is output to the console.
 #' @param modelled.fractiles logical, plot vertical lines for modelled 
-#'   fractiles?
-#' @param modelled.curve logical, plot modelled conditional mean prior density?
+#'   fractiles from the conditional mean prior distribution fit to
+#'   all design points? This option requires a design matrix \code{X} of full column rank.
+#' @param modelled.curve logical, plot modelled conditional mean prior density for
+#'   the entire model? This option requires a design matrix \code{X} of full column rank.
 #' @param cumul.prob.bounds numeric vector of length two, giving plot bounds by 
 #'   cumulative probability. This argument is ignored if there is not enough data
 #'   to fit a parametric distribution or if \code{theta.bounds} is not \code{NULL}
@@ -36,8 +39,6 @@
 #'   modelled or fitted fractiles
 #' @param n.pts numeric giving number of point to evalate density curve (if 
 #'   plotted)
-#' @param fit.method character method used to fit conditional mean prior:
-#'   \code{KL}, \code{moment}
 #' @return a plot to the current device. See \code{dev.cur()} to check.
 #' @examples 
 #' # design matrix: two scenarios
@@ -87,7 +88,7 @@
 #' indirect::plotDesignPoint(Z, design.pt = 2,   
 #'   elicited.fractiles = TRUE, theta.bounds = c(0, 1),
 #'   fitted.fractiles = TRUE, fitted.curve = TRUE)
-#' indirect::plotDesignPoint(Z, design.pt = 1,   
+#' indirect::plotDesignPoint(Z, design.pt = 2,   
 #'   elicited.fractiles = TRUE, theta.bounds = c(0, 1),
 #'   fitted.fractiles = c(1/10, 1/3, 1/2, 2/3, 9/10), 
 #'   fitted.curve = TRUE) 
@@ -96,20 +97,21 @@ plotDesignPoint <- function(Z, X = NULL, design.pt = NULL,
   CI.prob = NULL, estimated.probs = NULL,
   modelled.fractiles = FALSE, modelled.curve = FALSE, 
   cumul.prob.bounds = c(0.05, 0.95), theta.bounds = NULL, ylim.max = NULL, xlog = FALSE,
-  design.table = TRUE, n.pts = 101, fit.method = "KL") {
+  design.table = TRUE, n.pts = 101) {
   
   if (is.null(design.pt)) stop("specify design point")
   
   theta <- Z$theta
   link <- Z$link
   design <- Z$design
+  fit.method <- Z$fit.method
   
   # elicited data could be missing but design point must be specified
   dat <- theta[design.pt, 1:(ncol(theta) - 1)]
   
   # find fractiles
   ci.prob <- theta[design.pt, "CI_prob"]
-  cumul.probs <- c((1 - ci.prob)/2, 0.5, 1 - (1 - ci.prob)/2)
+  cumul.probs <- c((1 - ci.prob)/2, 1/2, 1 - (1 - ci.prob)/2)
   # if specific fitted fractiles aren't requested then use fractiles
   # for lower and upper central CI and median
   if (is.logical(fitted.fractiles)) {
@@ -338,17 +340,19 @@ plotDesignPoint <- function(Z, X = NULL, design.pt = NULL,
     gplots::textplot(designpoint, valign = "top", mar = c(1, 1, 2, 1))
     title(paste("Scenario:", row.names(design)[design.pt]))
     box("figure")
-    all.cumul.probs <- sort(unique(c(cumul.probs, cumul.probs.fit)))
-    elicit.ind <- match(cumul.probs, all.cumul.probs)
-    fitted.ind <- match(cumul.probs.fit, all.cumul.probs)
+    cprobs <- c(cumul.probs, cumul.probs.fit)
+    cprobs.fracs <- as.character(MASS::fractions(cprobs))
+    all.cumul.probs <- as.character(MASS::fractions(sort(cprobs[!duplicated(cprobs.fracs)])))
+    elicit.ind <- match(as.character(MASS::fractions(cumul.probs)), all.cumul.probs)
+    fitted.ind <- match(as.character(MASS::fractions(cumul.probs.fit)), all.cumul.probs)
     fractiles <- matrix(NA, nrow = length(all.cumul.probs), ncol = 2)
     fractiles[elicit.ind, 1] <- signif(dat, 3)
     if (modelled.fractiles) {
       fractiles[fitted.ind, 2] <- signif(dat.mod, 3)
-      dimnames(fractiles) <- list(Fractiles = as.character(MASS::fractions(all.cumul.probs)), c("Elicited", "Modelled"))
+      dimnames(fractiles) <- list(Fractiles = all.cumul.probs, c("Elicited", "Modelled"))
     } else {
       fractiles[fitted.ind, 2] <- signif(dat.fit, 3)
-      dimnames(fractiles) <- list(Fractiles = as.character(MASS::fractions(all.cumul.probs)), c("Elicited", "Fitted"))
+      dimnames(fractiles) <- list(Fractiles = all.cumul.probs, c("Elicited", "Fitted"))
     }
     gplots::textplot(fractiles, valign = "top", mar = c(1, 1, 2, 1))
     title("Fractiles")
@@ -370,7 +374,7 @@ plotDesignPoint <- function(Z, X = NULL, design.pt = NULL,
 #' sigma <- 1
 #' z <- rnorm(10000, mu, sigma)
 #' hist(1 - exp(-exp(z)), freq = FALSE)
-#' curve(dGompertzNorm(x, mu = mu, sigma = sigma), col = 'red', add = TRUE)
+#' curve(dGompertzNorm(x, mu = mu, sigma = sigma), col = 'red', add = TRUE, from = 0.01, to = 0.99)
 #' integrate(function(x) dGompertzNorm(x, mu = mu, sigma = sigma), lower = 0, upper = 1) # equals 1
 dGompertzNorm <- function(x, mu, sigma) {
   dnorm(log(-log(1 - x)), mu, sigma)/((x - 1)*log(1 - x))
@@ -387,7 +391,7 @@ dGompertzNorm <- function(x, mu, sigma) {
 #' sigma <- 1
 #' z <- rnorm(10000, mu, sigma)
 #' hist(exp(z)/(1 + exp(z)), freq = FALSE)
-#' curve(dLogitNorm(x, mu = mu, sigma = sigma), col = 'red', add = TRUE)
+#' curve(dLogitNorm(x, mu = mu, sigma = sigma), col = 'red', add = TRUE, from = 0.01, to = 0.99)
 #' integrate(function(x) dLogitNorm(x, mu = mu, sigma = sigma), lower = 0, upper = 1) # equals 1
 dLogitNorm <- function(x, mu, sigma) {
   dnorm(log(x/(1 - x)), mu, sigma)/(x*(1 - x))

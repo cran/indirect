@@ -6,11 +6,12 @@
 \usage{
 designLink(design, link = "identity", target = "Target", CI.prob = 1/2,
   expertID = "Expert", facilitator = "Facilitator", rapporteur = "none",
-  intro.comments = "This is a record of the elicitation session.")
+  intro.comments = "This is a record of the elicitation session.",
+  fit.method = "KL")
 }
 \arguments{
-\item{design}{a dataframe with covariate values that will be displayed
-to the expert(s) during the elicitation session.}
+\item{design}{a dataframe with covariate values that will be displayed to the
+expert(s) during the elicitation session.}
 
 \item{link}{character \code{logit}, \code{log}, \code{cloglog}, 
 \code{identity}}
@@ -18,9 +19,9 @@ to the expert(s) during the elicitation session.}
 \item{target}{character, name of target parameter of elicitation exercise}
 
 \item{CI.prob}{numeric, a fraction between 0 and 1 that defines probability 
-attributed to central credible interval. For example, 1/2 for a central credible interval
-of probability 0.5, or 1/3 for a central credible interval of probablity
-0.333... The default is 1/2}
+attributed to central credible interval. For example, 1/2 for a central 
+credible interval of probability 0.5, or 1/3 for a central credible 
+interval of probablity 0.333... The default is probability 1/2.}
 
 \item{expertID}{character, identifier for expert or group of experts}
 
@@ -28,16 +29,25 @@ of probability 0.5, or 1/3 for a central credible interval of probablity
 
 \item{rapporteur}{character, rapporteur identifier. Default "none".}
 
-\item{intro.comments}{character, text with any prefacing comments. Beware of 
-non-ASCII text and special characters, which may affect ability to render 
-the likes of Sweave, knitr, markdown, etc.}
+\item{intro.comments}{character, text with any prefacing comments. This may 
+include, for example, the definition of the target parameter for the 
+elictation session. Beware of non-ASCII text and special characters, which 
+may affect the ability to save the elicitation record with function \code{\link{saveRecord}}
+or create a summary report with function \code{\link{makeSweave}}
+if called by the function \code{\link{makeSweave}} may affect ability to render  by
+means of \code{\link[utils]{Sweave}} or \code{knitr} etc.}
+
+\item{fit.method}{character, method used to fit conditional means prior: 
+\code{KL} (default), \code{moment}, \code{SS} (see vignette and
+\code{\link{mV}} for more information on these options)}
 }
 \value{
 list of \code{design} with entries: \code{theta}, a \eqn{n x 4} 
   matrix with columns that give lower, median and upper quantiles followed by
-  \code{CI.prob}; \code{link}, the link function used; \code{target}; 
+  \code{CI.prob} and \eqn{n} equal to the number of design points 
+  (scenarios); \code{link}, the link function used; \code{target}; 
   \code{expert} \code{facilitator}; \code{rapporteur}; \code{date}; 
-  \code{intro.comments}.
+  \code{intro.comments}; \code{fit.method}.
 }
 \description{
 This builds the structure that will store elicited data. The linear predictor
@@ -46,13 +56,14 @@ target. Link functions \eqn{g(.)}: \code{logit}, \code{log}, \code{cloglog},
 \code{identity}.
 }
 \details{
-Assumption: at least two of median and upper and lower bound of central 
-credible interval of probability \code{CI.prob} is elicited at each design 
-point. The probabilities assigned to the central credible intervals  can vary
-across design points.  \code{CI.prob} may vary by design point during the
-elicitation exercise. In the first instance, it is set to a global value
-specified by \code{CI.prob} with default value \eqn{0.5}.
-#'
+Assumption: at least two fractiles selected from the median, upper and lower 
+bounds of hte central credible interval of probability \code{CI.prob} will be
+elicited at each design point. The probabilities assigned to the central 
+credible intervals  can vary across design points. The argument 
+\code{CI.prob} can later be adjusted by design point during the elicitation 
+exercise, see function \code{\link{elicitPt}}. In the first instance, it is
+set to a global value specified by \code{CI.prob} in function
+\code{\link{designLink}} with default value \eqn{0.5}.
 }
 \examples{
 X <- matrix(c(1, 1, 0, 1), nrow = 2) # design

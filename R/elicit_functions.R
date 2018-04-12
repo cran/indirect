@@ -5,33 +5,42 @@
 #' target. Link functions \eqn{g(.)}: \code{logit}, \code{log}, \code{cloglog}, 
 #' \code{identity}.
 #' 
-#' Assumption: at least two of median and upper and lower bound of central 
-#' credible interval of probability \code{CI.prob} is elicited at each design 
-#' point. The probabilities assigned to the central credible intervals  can vary
-#' across design points.  \code{CI.prob} may vary by design point during the
-#' elicitation exercise. In the first instance, it is set to a global value
-#' specified by \code{CI.prob} with default value \eqn{0.5}.
-#' #' 
-#' @param design a dataframe with covariate values that will be displayed
-#' to the expert(s) during the elicitation session.
+#' Assumption: at least two fractiles selected from the median, upper and lower 
+#' bounds of hte central credible interval of probability \code{CI.prob} will be
+#' elicited at each design point. The probabilities assigned to the central 
+#' credible intervals  can vary across design points. The argument 
+#' \code{CI.prob} can later be adjusted by design point during the elicitation 
+#' exercise, see function \code{\link{elicitPt}}. In the first instance, it is
+#' set to a global value specified by \code{CI.prob} in function
+#' \code{\link{designLink}} with default value \eqn{0.5}.
+#' @param design a dataframe with covariate values that will be displayed to the
+#'   expert(s) during the elicitation session.
 #' @param link character \code{logit}, \code{log}, \code{cloglog}, 
 #'   \code{identity}
 #' @param target character, name of target parameter of elicitation exercise
 #' @param CI.prob numeric, a fraction between 0 and 1 that defines probability 
-#'   attributed to central credible interval. For example, 1/2 for a central credible interval
-#'   of probability 0.5, or 1/3 for a central credible interval of probablity
-#'   0.333... The default is 1/2
+#'   attributed to central credible interval. For example, 1/2 for a central 
+#'   credible interval of probability 0.5, or 1/3 for a central credible 
+#'   interval of probablity 0.333... The default is probability 1/2.
 #' @param expertID character, identifier for expert or group of experts
 #' @param facilitator character, facilitator identifier
 #' @param rapporteur character, rapporteur identifier. Default "none".
-#' @param intro.comments character, text with any prefacing comments. Beware of 
-#'   non-ASCII text and special characters, which may affect ability to render 
-#'   the likes of Sweave, knitr, markdown, etc.
+#' @param intro.comments character, text with any prefacing comments. This may 
+#'   include, for example, the definition of the target parameter for the 
+#'   elictation session. Beware of non-ASCII text and special characters, which 
+#'   may affect the ability to save the elicitation record with function \code{\link{saveRecord}}
+#'   or create a summary report with function \code{\link{makeSweave}}
+#'   if called by the function \code{\link{makeSweave}} may affect ability to render  by
+#'   means of \code{\link[utils]{Sweave}} or \code{knitr} etc.
+#' @param fit.method character, method used to fit conditional means prior: 
+#'   \code{KL} (default), \code{moment}, \code{SS} (see vignette and
+#'   \code{\link{mV}} for more information on these options) 
 #' @return list of \code{design} with entries: \code{theta}, a \eqn{n x 4} 
 #'   matrix with columns that give lower, median and upper quantiles followed by
-#'   \code{CI.prob}; \code{link}, the link function used; \code{target}; 
+#'   \code{CI.prob} and \eqn{n} equal to the number of design points 
+#'   (scenarios); \code{link}, the link function used; \code{target}; 
 #'   \code{expert} \code{facilitator}; \code{rapporteur}; \code{date}; 
-#'   \code{intro.comments}.
+#'   \code{intro.comments}; \code{fit.method}.
 #' @examples
 #' X <- matrix(c(1, 1, 0, 1), nrow = 2) # design
 #' Z <- designLink(design = X, link = "logit", target = "target",
@@ -39,7 +48,8 @@
 designLink <- function(design, link = "identity", target = "Target", CI.prob = 1/2,
                        expertID = "Expert", facilitator = "Facilitator",
                        rapporteur = "none",  
-                       intro.comments = "This is a record of the elicitation session.") {
+                       intro.comments = "This is a record of the elicitation session.",
+                       fit.method = "KL") {
   
   # append columns for elicited responses 
   theta <- matrix(NA, nrow = nrow(design), ncol = 4,
@@ -56,7 +66,7 @@ designLink <- function(design, link = "identity", target = "Target", CI.prob = 1
   Z <- list(design = design, theta = theta, link = link, target = target,
             expertID = expertID, facilitator = facilitator, 
             rapporteur = rapporteur, intro.comments = intro.comments,
-            comments = rep(" ", nrow(design)))
+            comments = rep(" ", nrow(design)), fit.method = fit.method)
   
 }
 
@@ -66,7 +76,7 @@ designLink <- function(design, link = "identity", target = "Target", CI.prob = 1
 #'   matrix with columns that give lower, median and upper quantiles of the 
 #'   central credible interval followed by the probability \code{CI.prob} 
 #'   allocated to the interval; \code{link}, the link function used; and 
-#'   \code{target}
+#'   \code{target}. This list object is created by \code{\link{designLink}}
 #' @param design.pt single integer that denotes design point of interest
 #' @param lower.CI.bound scalar that gives the lower bound of the central 
 #'   credible interval, default \code{NA}.
@@ -76,7 +86,7 @@ designLink <- function(design, link = "identity", target = "Target", CI.prob = 1
 #' @param CI.prob numeric, a fraction between 0 and 1 that defines probability 
 #'   attributed to central credible interval. For example, 1/2 for quartiles or
 #'   1/3 for tertiles. Default \code{NULL} uses the initial \code{CI.prob} as
-#'   defined by \code{designLink()}.
+#'   defined by \code{\link{designLink}}.
 #' @param comment character, ASCII text providing contributed commentary associated 
 #' with elicitation design point. It is recommended to avoid special characters
 #' such as quotation marks etc.
@@ -149,7 +159,8 @@ elicitPt <- function(Z, design.pt = NULL,
 
 #' Function to check condition number diagnostic.
 #' 
-#' This function calculates the condition number of  the rescaled \eqn{n \times p} design matrix \eqn{X} such that each column has unit length.
+#' This function calculates the condition number of  the rescaled \eqn{n x
+#' p} design matrix \eqn{X} such that each column has unit length.
 #' 
 #' @param X Design matrix
 #' @return a scalar giving the condition number of the rescaled design matrix
@@ -164,11 +175,11 @@ CNdiag <- function(X) {
 
 #' Function to save elicitation record.
 #' 
-#' @param designLink.obj list object initally created by function \code{designLink()} 
-#'   and subsequently updated by function \code{elicitPt()}
+#' @param designLink.obj list object initally created by function \code{\link{designLink}} 
+#'   and subsequently updated by function \code{\link{elicitPt}}
 #' @param conclusion.comments character, comments to conclude session. Beware of
-#'   non-ASCII text and special characters, which may affect ability to save and
-#'   render the likes of Sweave, knitr, markdown, etc. 
+#'   non-ASCII text and special characters, which may affect ability to save or
+#'   generate a \code{Sweave} document by using \code{\link{makeSweave}} 
 #' @param file character providing filename. 
 #' @return an RDS file is created with filename \code{file}. A timestamp is
 #'   added to \code{designLink.obj} using \code{Sys.time()}.
@@ -188,26 +199,29 @@ saveRecord <- function(designLink.obj, conclusion.comments = "This concludes the
 
 #' Function to create summary document from a saved elicitation record.
 #' 
-#' Generates report and accompanying files including pdf versions of plots, a
-#' pdf summary report and accompanying latex and Sweave files created by
-#' \code{knitr::knit2pdf}.
+#' Creates a Sweave file that can be used to generate a pdf document of the 
+#' summary report.
 #' 
-#' @param filename.rds character, filename of the record saved as an RDS object
+#' @param filename.rds character, filename of the record saved as an RDS object,
+#'   see \code{?saveRDS}.
 #' @param reportname character, filename without extension to be used for the 
-#'   report .pdf documentation and accompanying files such as the .tex file
-#'    generated by using \code{knitr::knit2pdf}
+#'   generated Sweave (\code{.Rnw}) file. The Sweave file supports the creation
+#'   of report (\code{.pdf}) documentation and accompanying files such as the
+#'   \code{.tex} file generated by using \code{\link[utils]{Sweave}} followed by
+#'   \code{tools::texi2pdf()}.
 #' @param title character, a title for the report
 #' @param contact.details character, an email address or other mechanism by 
 #'   which the expert may contact the facilitator or rapporteur
-#' @param fitted.fractiles logical or numeric vector. A logical value of FALSE 
-#'   will not plot any fitted fractiles from the fitted subjective probability 
-#'   distribution. A logical value of TRUE will plot the fitted fractiles that 
-#'   correspond to the final iteration of the raw elicited fractiles. 
-#'   Alternatively, a numeric vector can specify arbitrary fractiles for 
-#'   plotting from the fitted distribution, e.g., c(1/10, 1/4, 1/2, 3/4, 9/10)
+#' @param fitted.fractiles logical or numeric vector. A logical value of
+#'   \code{FALSE} will not plot any fitted fractiles from the fitted subjective
+#'   probability distribution. A logical value of \code{TRUE} will plot the
+#'   fitted fractiles that correspond to the final iteration of the raw elicited
+#'   fractiles. Alternatively, a numeric vector can specify arbitrary fractiles
+#'   for plotting from the fitted distribution, e.g., \code{c(1/10, 1/4, 1/2,
+#'   3/4, 9/10)}
 #' @param cumul.prob.bounds numeric vector that specifies the upper and lower 
-#'   plot bounds determined by this credible interval. The default is the 0.80 
-#'   central credible interval, c(0.05, 0.95)
+#'   plot bounds determined by this credible interval. The default is the 0.90 
+#'   central credible interval, \code{c(0.05, 0.95)}
 #' @examples 
 #' \dontrun{ 
 #' X <- matrix(c(1, 1, 0, 1), nrow = 2) # design
@@ -220,7 +234,7 @@ saveRecord <- function(designLink.obj, conclusion.comments = "This concludes the
 #' tmp.rds <- tempfile(pattern = "record", fileext =".rds")
 #' saveRecord(Z, file = tmp.rds)
 #' tmpReport <- tempfile(pattern = "report")
-#' makeReport(filename.rds = tmp.rds, reportname = tmpReport)
+#' makeSweave(filename.rds = tmp.rds, reportname = tmpReport)
 #' setwd(tempdir())
 #' utils::Sweave(paste0(tmpReport, ".Rnw"))
 #' tools::texi2pdf(paste0(tmpReport, ".tex")) 

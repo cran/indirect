@@ -1,4 +1,4 @@
-#' indirect: A package for assisting indirect elicitation.
+#' indirect: A package for assisting indirect elicitation of priors for generalised linear models.
 #' 
 #' The \code{indirect} package provides three categories of functions: elicitation
 #' functions, fitting functions and visualisation functions.
@@ -8,10 +8,10 @@
 #'   function is \code{\link{designLink}}, which defines a list object that contains
 #'   information about the design and elicitation. The elicitations are recorded and updated
 #'   via function \code{\link{elicitPt}}.
-#' @section Fitting functions: These are generally helper functions. This 
-#'   includes \code{\link{mV}} for the elicited moments of the MVN prior and 
-#'   \code{\link{muSigma}} for estimating the mean vector and covariance 
-#'   matrix of the unknown coefficients, along with other helper functions.
+#' @section Fitting functions: These are generally helper functions except for the function 
+#'   \code{\link{muSigma}} that is used for estimating the mean vector and covariance 
+#'   matrix of the unknown coefficients for the multivariate normal prior. Helper functions 
+#'   include \code{\link{mV}} for the elicited moments of conditional means priors. 
 #' @section Visualisation functions: These are functions for visualisation. The
 #'   core function is \code{\link{plotDesignPoint}}.
 #' @references Hosack, G. R., Hayes, K. R., & Barry, S. C. (2017). Prior elicitation 

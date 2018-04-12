@@ -19,7 +19,7 @@ rank when subsetted to the elicited design points. If a column of \code{X}
 has the name \code{offset} then this column is treated as an offset during 
 estimation}
 
-\item{fit.method}{character, \code{moment}, \code{KL}. See \code{mV()}. Default
+\item{fit.method}{character, \code{moment}, \code{KL}. See \code{\link{mV}}. Default
 is \code{KL}.}
 
 \item{wls.method}{character giving the numerical solution method: \code{QR}, 

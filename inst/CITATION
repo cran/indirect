@@ -5,7 +5,7 @@ bibentry(bibtype = "Manual",
          author = "Geoffrey R. Hosack",                     
          year = year,          
          note = note,
-#         url = {"https://CRAN.R-project.org/package=indirect"}
+         url = {"https://CRAN.R-project.org/package=indirect"}
 ) 
 bibentry(bibtype = "Article",
          title = "Prior elicitation for {B}ayesian generalised linear models with application to risk control option assessment",

@@ -8,12 +8,12 @@ saveRecord(designLink.obj,
   conclusion.comments = "This concludes the elicitation record.", file = "")
 }
 \arguments{
-\item{designLink.obj}{list object initally created by function \code{designLink()} 
-and subsequently updated by function \code{elicitPt()}}
+\item{designLink.obj}{list object initally created by function \code{\link{designLink}} 
+and subsequently updated by function \code{\link{elicitPt}}}
 
 \item{conclusion.comments}{character, comments to conclude session. Beware of
-non-ASCII text and special characters, which may affect ability to save and
-render the likes of Sweave, knitr, markdown, etc.}
+non-ASCII text and special characters, which may affect ability to save or
+generate a \code{Sweave} document by using \code{\link{makeSweave}}}
 
 \item{file}{character providing filename.}
 }

@@ -9,11 +9,12 @@ plotDesignPoint(Z, X = NULL, design.pt = NULL, elicited.fractiles = TRUE,
   estimated.probs = NULL, modelled.fractiles = FALSE,
   modelled.curve = FALSE, cumul.prob.bounds = c(0.05, 0.95),
   theta.bounds = NULL, ylim.max = NULL, xlog = FALSE,
-  design.table = TRUE, n.pts = 101, fit.method = "KL")
+  design.table = TRUE, n.pts = 101)
 }
 \arguments{
 \item{Z}{list object that contains matrix \code{theta} of elicitations,
-character \code{link} and character \code{target}}
+character \code{link} and character \code{target} as initialised by
+\code{\link{designLink}} and updated by \code{\link{elicitPt}}}
 
 \item{X}{design matrix (can be \code{NULL}, unless modelled output is
 requested)}
@@ -23,18 +24,18 @@ requested)}
 \item{elicited.fractiles}{logical, plot vertical lines for elicited 
 fractiles?}
 
-\item{fitted.fractiles}{logical, plot vertical lines for fitted marginal 
-fractiles? Alternatively, a numeric vector of arbitrary fractiles to be
+\item{fitted.fractiles}{logical, plot vertical lines for fitted conditional
+mean prior fractiles for this design point? Alternatively, a numeric vector of arbitrary fractiles to be
 plotted from the fitted elicitation distribution. If \code{TRUE} then the
 fractiles corresponding to the median, upper and lower level central CI
 are plotted}
 
-\item{fitted.curve, }{logical plot fitted elicitation density?}
+\item{fitted.curve, }{logical plot fitted conditional mean prior density for this design point?}
 
 \item{CI.prob}{numeric scalar, locally specified probability assigned to the
 elicited central credible interval of the current design point. Defaults to
 \code{NULL} in which case the global value initially assigned by
-\code{designLink()} is used}
+\code{\link{designLink}} or as updated by \code{\link{elicitPt}} is used}
 
 \item{estimated.probs}{numeric vector of values for which estimated
 probabilities are to be estimated from the fitted elicitation 
@@ -42,9 +43,11 @@ distribution for the target theta. Default is \code{NULL}.
 The result is output to the console.}
 
 \item{modelled.fractiles}{logical, plot vertical lines for modelled 
-fractiles?}
+fractiles from the conditional mean prior distribution fit to
+all design points? This option requires a design matrix \code{X} of full column rank.}
 
-\item{modelled.curve}{logical, plot modelled conditional mean prior density?}
+\item{modelled.curve}{logical, plot modelled conditional mean prior density for
+the entire model? This option requires a design matrix \code{X} of full column rank.}
 
 \item{cumul.prob.bounds}{numeric vector of length two, giving plot bounds by 
 cumulative probability. This argument is ignored if there is not enough data
@@ -63,9 +66,6 @@ modelled or fitted fractiles}
 
 \item{n.pts}{numeric giving number of point to evalate density curve (if 
 plotted)}
-
-\item{fit.method}{character method used to fit conditional mean prior:
-\code{KL}, \code{moment}}
 }
 \value{
 a plot to the current device. See \code{dev.cur()} to check.
@@ -121,7 +121,7 @@ indirect::plotDesignPoint(Z, design.pt = 2,
 indirect::plotDesignPoint(Z, design.pt = 2,   
   elicited.fractiles = TRUE, theta.bounds = c(0, 1),
   fitted.fractiles = TRUE, fitted.curve = TRUE)
-indirect::plotDesignPoint(Z, design.pt = 1,   
+indirect::plotDesignPoint(Z, design.pt = 2,   
   elicited.fractiles = TRUE, theta.bounds = c(0, 1),
   fitted.fractiles = c(1/10, 1/3, 1/2, 2/3, 9/10), 
   fitted.curve = TRUE) 

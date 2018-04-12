@@ -12,7 +12,7 @@ elicitPt(Z, design.pt = NULL, lower.CI.bound = NA, median = NA,
 matrix with columns that give lower, median and upper quantiles of the 
 central credible interval followed by the probability \code{CI.prob} 
 allocated to the interval; \code{link}, the link function used; and 
-\code{target}}
+\code{target}. This list object is created by \code{\link{designLink}}}
 
 \item{design.pt}{single integer that denotes design point of interest}
 
@@ -27,7 +27,7 @@ credible interval, default \code{NA}.}
 \item{CI.prob}{numeric, a fraction between 0 and 1 that defines probability 
 attributed to central credible interval. For example, 1/2 for quartiles or
 1/3 for tertiles. Default \code{NULL} uses the initial \code{CI.prob} as
-defined by \code{designLink()}.}
+defined by \code{\link{designLink}}.}
 
 \item{comment}{character, ASCII text providing contributed commentary associated 
 with elicitation design point. It is recommended to avoid special characters

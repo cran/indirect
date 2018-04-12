@@ -13,7 +13,8 @@ CNdiag(X)
 a scalar giving the condition number of the rescaled design matrix
 }
 \description{
-This function calculates the condition number of  the rescaled \eqn{n \times p} design matrix \eqn{X} such that each column has unit length.
+This function calculates the condition number of  the rescaled \eqn{n x
+p} design matrix \eqn{X} such that each column has unit length.
 }
 \examples{
 X <- matrix(rnorm(16), nrow = 4)

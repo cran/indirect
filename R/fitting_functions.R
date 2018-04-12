@@ -18,7 +18,7 @@
 #' function for \code{KL} and \code{SS}.
 #' 
 #' @param Z list object that contains matrix \code{theta} of elicitations and
-#'   character \code{link}, see \code{plotDesignPoint()}
+#'   character \code{link}, see \code{\link{plotDesignPoint}}
 #' @param fit.method character, \code{moment}, \code{KL}, \code{SS}. Default is
 #'   \code{KL}.
 #' @return A list with vector of means \code{m} and diagonal covariance matrix 
@@ -143,7 +143,7 @@ mV <- function(Z, fit.method = "KL") {
 #'   rank when subsetted to the elicited design points. If a column of \code{X} 
 #'   has the name \code{offset} then this column is treated as an offset during 
 #'   estimation
-#' @param fit.method character, \code{moment}, \code{KL}. See \code{mV()}. Default
+#' @param fit.method character, \code{moment}, \code{KL}. See \code{\link{mV}}. Default
 #'   is \code{KL}.
 #' @param wls.method character giving the numerical solution method: \code{QR}, 
 #'   using the QR decomposition, \code{SVD}, using the singular value 
@@ -290,9 +290,9 @@ checkX <- function(X) {
 #' point.
 #' 
 #' @param x numeric: coordinate
-#' @param Z list of design points and link function, see \code{designLink()}
+#' @param Z list of design points and link function, see \code{\link{designLink}}
 #' @param design.pt integer: design point
-#' @param fit.method character: method for fit in \code{mV()}, default is \code{KL}
+#' @param fit.method character: method for fit in \code{\link{mV}}, default is \code{KL}
 #' @examples 
 #' # design matrix: two scenarios
 #' X <- matrix(c(1, 1, 0, 1), nrow = 2) 
