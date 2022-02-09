@@ -4,10 +4,17 @@
 \alias{designLink}
 \title{Create list with information for the elicitation session}
 \usage{
-designLink(design, link = "identity", target = "Target", CI.prob = 1/2,
-  expertID = "Expert", facilitator = "Facilitator", rapporteur = "none",
+designLink(
+  design,
+  link = "identity",
+  target = "Target",
+  CI.prob = 1/2,
+  expertID = "Expert",
+  facilitator = "Facilitator",
+  rapporteur = "none",
   intro.comments = "This is a record of the elicitation session.",
-  fit.method = "KL")
+  fit.method = "KL"
+)
 }
 \arguments{
 \item{design}{a dataframe with covariate values that will be displayed to the

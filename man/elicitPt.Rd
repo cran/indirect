@@ -4,8 +4,15 @@
 \alias{elicitPt}
 \title{Function to create or update elicitation at a given design point.}
 \usage{
-elicitPt(Z, design.pt = NULL, lower.CI.bound = NA, median = NA,
-  upper.CI.bound = NA, CI.prob = NULL, comment = " ")
+elicitPt(
+  Z,
+  design.pt = NULL,
+  lower.CI.bound = NA,
+  median = NA,
+  upper.CI.bound = NA,
+  CI.prob = NULL,
+  comment = " "
+)
 }
 \arguments{
 \item{Z}{list of \code{design} with entries: \code{theta}, a \eqn{n x 4} 

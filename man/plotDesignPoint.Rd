@@ -4,12 +4,24 @@
 \alias{plotDesignPoint}
 \title{Plot elicited data, fitted marginals or model output}
 \usage{
-plotDesignPoint(Z, X = NULL, design.pt = NULL, elicited.fractiles = TRUE,
-  fitted.fractiles = FALSE, fitted.curve = FALSE, CI.prob = NULL,
-  estimated.probs = NULL, modelled.fractiles = FALSE,
-  modelled.curve = FALSE, cumul.prob.bounds = c(0.05, 0.95),
-  theta.bounds = NULL, ylim.max = NULL, xlog = FALSE,
-  design.table = TRUE, n.pts = 101)
+plotDesignPoint(
+  Z,
+  X = NULL,
+  design.pt = NULL,
+  elicited.fractiles = TRUE,
+  fitted.fractiles = FALSE,
+  fitted.curve = FALSE,
+  CI.prob = NULL,
+  estimated.probs = NULL,
+  modelled.fractiles = FALSE,
+  modelled.curve = FALSE,
+  cumul.prob.bounds = c(0.05, 0.95),
+  theta.bounds = NULL,
+  ylim.max = NULL,
+  xlog = FALSE,
+  design.table = TRUE,
+  n.pts = 101
+)
 }
 \arguments{
 \item{Z}{list object that contains matrix \code{theta} of elicitations,

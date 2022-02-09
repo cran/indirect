@@ -4,9 +4,14 @@
 \alias{makeSweave}
 \title{Function to create summary document from a saved elicitation record.}
 \usage{
-makeSweave(filename.rds = "", reportname = "",
-  title = "Elicitation record", contact.details = "none",
-  fitted.fractiles = TRUE, cumul.prob.bounds = c(0.05, 0.95))
+makeSweave(
+  filename.rds = "",
+  reportname = "",
+  title = "Elicitation record",
+  contact.details = "none",
+  fitted.fractiles = TRUE,
+  cumul.prob.bounds = c(0.05, 0.95)
+)
 }
 \arguments{
 \item{filename.rds}{character, filename of the record saved as an RDS object,

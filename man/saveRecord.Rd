@@ -4,8 +4,11 @@
 \alias{saveRecord}
 \title{Function to save elicitation record.}
 \usage{
-saveRecord(designLink.obj,
-  conclusion.comments = "This concludes the elicitation record.", file = "")
+saveRecord(
+  designLink.obj,
+  conclusion.comments = "This concludes the elicitation record.",
+  file = ""
+)
 }
 \arguments{
 \item{designLink.obj}{list object initally created by function \code{\link{designLink}} 

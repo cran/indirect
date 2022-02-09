@@ -3,7 +3,6 @@
 \docType{package}
 \name{indirect}
 \alias{indirect}
-\alias{indirect-package}
 \title{indirect: A package for assisting indirect elicitation of priors for generalised linear models.}
 \description{
 The \code{indirect} package provides three categories of functions: elicitation

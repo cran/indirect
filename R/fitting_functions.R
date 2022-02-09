@@ -44,7 +44,7 @@ mV <- function(Z, fit.method = "KL") {
   # initialise from "moments"
   m.init <- g.theta[ , 'median']
   V.init <- ((g.theta[ , "upper"] - g.theta[ , "lower"])/(qnorm(hi.CI) - qnorm(lo.CI)))^2
-  m.init[is.na(m.init)] <- (g.theta[is.na(m.init), "upper"] - g.theta[is.na(m.init), "lower"])/2
+  m.init[is.na(m.init)] <- (g.theta[is.na(m.init), "upper"] + g.theta[is.na(m.init), "lower"])/2
   
   # allow for only partially specified bounds for central CI
   uppers.and.medians <- (!is.na(g.theta[ , "median"])) & (is.na(g.theta[ , "lower"]) & (!is.na(g.theta[ , "upper"])))
